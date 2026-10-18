@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title th:text="${item.id != null ? 'Edit Inventory Product' : 'Add Inventory Product'}">
+        Inventory Product Form
+    </title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 550px;
+            margin: 30px auto;
+            padding: 20px;
+            background: #f1f5f9;
+        }
+
+        form {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 18px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        a { margin-left: 10px; }
+    </style>
+</head>
+
+<body>
+
+<h1 th:text="${item.id != null ? 'Edit Inventory Product' : 'Add Inventory Product'}">
+    Inventory Product Form
+</h1>
+
+<form th:action="${item.id != null
+        ? '/inventory/update/' + item.id
+        : '/inventory/save'}"
+      th:object="${item}"
+      method="post">
+
+    <label>Product Name</label>
+    <input type="text" th:field="*{productName}" required>
+
+    <label>Category</label>
+    <input type="text" th:field="*{category}" required>
+
+    <label>Quantity</label>
+    <input type="number" th:field="*{quantity}" min="0" required>
+
+    <label>Reorder Level</label>
+    <input type="number" th:field="*{reorderLevel}" min="0" required>
+
+    <label>Unit Price</label>
+    <input type="number" th:field="*{unitPrice}"
+           min="0" step="0.01" required>
+
+    <button type="submit"
+            th:text="${item.id != null ? 'Update Product' : 'Save Product'}">
+        Save Product
+    </button>
+
+    <a th:href="@{/inventory}">Cancel</a>
+</form>
+
+</body>
+</html>

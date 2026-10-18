@@ -1,0 +1,447 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Supply Chain Analytics Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0f172a, #1d4ed8);
+            color: white;
+            padding: 24px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            margin: 0 0 8px;
+            font-size: 27px;
+        }
+
+        .header p {
+            margin: 0;
+            color: #dbeafe;
+        }
+
+        .logout-form {
+            margin: 0;
+        }
+
+        .logout-button {
+            padding: 11px 20px;
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .logout-button:hover {
+            background: #b91c1c;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+            padding: 28px 5%;
+        }
+
+        .section-title {
+            margin: 0 0 20px;
+            font-size: 22px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 35px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+            border-left: 5px solid #2563eb;
+            min-width: 0;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: #64748b;
+            margin: 0 0 13px;
+            font-weight: normal;
+        }
+
+        .stat-card .value {
+            font-size: 27px;
+            font-weight: bold;
+            overflow-wrap: anywhere;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 35px;
+        }
+
+        .module-card {
+            background: white;
+            padding: 23px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .module-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+        }
+
+        .module-card h3 {
+            margin: 0 0 10px;
+            color: #1d4ed8;
+        }
+
+        .module-card p {
+            color: #64748b;
+            line-height: 1.6;
+            min-height: 45px;
+        }
+
+        .module-card a {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 10px 15px;
+            border-radius: 7px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .module-card a:hover {
+            background: #1d4ed8;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+            min-width: 0;
+        }
+
+        .chart-card h3 {
+            margin: 0 0 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 22px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        @media (max-width: 1000px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .modules-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 650px) {
+            .header {
+                padding: 22px 5%;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            .container {
+                padding: 22px 4%;
+            }
+
+            .stats-grid,
+            .modules-grid,
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-card .value {
+                font-size: 24px;
+            }
+
+            .chart-container {
+                height: 260px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+    <div>
+        <h1>Supply Chain Analytics Dashboard</h1>
+        <p>Monitor inventory, suppliers, orders and demand forecasts.</p>
+    </div>
+
+    <!-- Secure logout: POST request with CSRF protection -->
+    <form class="logout-form" th:action="@{/logout}" method="post">
+        <button type="submit" class="logout-button">
+            Logout
+        </button>
+    </form>
+</header>
+
+<main class="container">
+
+    <h2 class="section-title">Dashboard Overview</h2>
+
+    <!-- KPI Cards -->
+    <section class="stats-grid">
+
+        <div class="stat-card">
+            <h3>Total Suppliers</h3>
+            <div class="value" th:text="${totalSuppliers}">0</div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Average Supplier Rating</h3>
+            <div class="value"
+                 th:text="${#numbers.formatDecimal(averageRating, 1, 2)}">
+                0.00
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Products</h3>
+            <div class="value" th:text="${totalProducts}">0</div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Low Stock Items</h3>
+            <div class="value" th:text="${lowStockCount}">0</div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Orders</h3>
+            <div class="value" th:text="${totalOrders}">0</div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Pending Orders</h3>
+            <div class="value" th:text="${pendingOrders}">0</div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Total Order Value</h3>
+            <div class="value">
+                ₹<span th:text="${#numbers.formatDecimal(totalOrderValue, 1, 2)}">0.00</span>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Application Modules -->
+    <h2 class="section-title">Manage Your Supply Chain</h2>
+
+    <section class="modules-grid">
+
+        <div class="module-card">
+            <h3>Supplier Management</h3>
+            <p>View and manage supplier information, contacts and ratings.</p>
+            <a th:href="@{/suppliers}">Open Suppliers</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Inventory Management</h3>
+            <p>Track product quantities, prices and low-stock items.</p>
+            <a th:href="@{/inventory}">Open Inventory</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Supply Orders</h3>
+            <p>Review supply orders, quantities, values and order statuses.</p>
+            <a th:href="@{/orders}">Open Orders</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Demand Forecasting</h3>
+            <p>Review historical product demand and estimated future demand.</p>
+            <a th:href="@{/forecast}">View Forecast</a>
+        </div>
+
+        <div class="module-card">
+            <h3>Supplier Analytics</h3>
+            <p>Analyze supplier ratings and compare supplier performance.</p>
+            <a th:href="@{/supplier-analytics}">View Analytics</a>
+        </div>
+
+    </section>
+
+    <!-- Charts -->
+    <h2 class="section-title">Visual Analytics</h2>
+
+    <section class="charts-grid">
+
+        <div class="chart-card">
+            <h3>Order Status Distribution</h3>
+            <div class="chart-container">
+                <canvas id="orderStatusChart"></canvas>
+            </div>
+            <p id="orderEmpty" hidden>No order data is available yet.</p>
+        </div>
+
+        <div class="chart-card">
+            <h3>Inventory Stock Levels</h3>
+            <div class="chart-container">
+                <canvas id="inventoryChart"></canvas>
+            </div>
+            <p id="inventoryEmpty" hidden>No inventory data is available yet.</p>
+        </div>
+
+    </section>
+
+</main>
+
+<footer class="footer">
+    Supply Chain Analytics System | Dashboard
+</footer>
+
+<script th:inline="javascript">
+    const orderStatusCounts =
+        /*[[${orderStatusCounts}]]*/ {};
+
+    const productNames =
+        /*[[${productNames}]]*/ [];
+
+    const stockQuantities =
+        /*[[${stockQuantities}]]*/ [];
+
+    // Order status doughnut chart
+    const statusLabels = Object.keys(orderStatusCounts || {});
+    const statusValues = Object.values(orderStatusCounts || {});
+
+    if (statusLabels.length > 0) {
+        new Chart(document.getElementById('orderStatusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: statusLabels,
+                datasets: [{
+                    label: 'Number of Orders',
+                    data: statusValues,
+                    backgroundColor: [
+                        '#2563eb',
+                        '#16a34a',
+                        '#f59e0b',
+                        '#dc2626',
+                        '#9333ea',
+                        '#64748b'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    } else {
+        document.getElementById('orderStatusChart').hidden = true;
+        document.getElementById('orderEmpty').hidden = false;
+    }
+
+    // Inventory stock bar chart
+    if (productNames && productNames.length > 0) {
+        new Chart(document.getElementById('inventoryChart'), {
+            type: 'bar',
+            data: {
+                labels: productNames,
+                datasets: [{
+                    label: 'Available Quantity',
+                    data: stockQuantities,
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#1d4ed8',
+                    borderWidth: 1,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            autoSkip: true,
+                            maxRotation: 45,
+                            minRotation: 0
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    } else {
+        document.getElementById('inventoryChart').hidden = true;
+        document.getElementById('inventoryEmpty').hidden = false;
+    }
+</script>
+
+</body>
+</html>

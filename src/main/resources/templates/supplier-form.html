@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${supplier.id != null ? 'Edit Supplier' : 'Add Supplier'}">
+        Supplier Form
+    </title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f4f7fb;
+        }
+
+        h1 { color: #1e3a5f; }
+
+        label {
+            display: block;
+            margin-top: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 18px;
+            background: #1e3a5f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        a { margin-left: 10px; }
+    </style>
+</head>
+
+<body>
+
+<h1 th:text="${supplier.id != null ? 'Edit Supplier' : 'Add Supplier'}">
+    Supplier Form
+</h1>
+
+<form th:action="${supplier.id != null
+        ? '/suppliers/update/' + supplier.id
+        : '/suppliers/save'}"
+      th:object="${supplier}"
+      method="post">
+
+    <label>Supplier Name</label>
+    <input type="text" th:field="*{supplierName}" required>
+
+    <label>Contact Person</label>
+    <input type="text" th:field="*{contactPerson}">
+
+    <label>Email</label>
+    <input type="email" th:field="*{email}">
+
+    <label>Phone</label>
+    <input type="text" th:field="*{phone}">
+
+    <label>Location</label>
+    <input type="text" th:field="*{location}">
+
+    <label>Rating (0–5)</label>
+    <input type="number"
+           th:field="*{rating}"
+           min="0"
+           max="5"
+           step="0.1"
+           required>
+
+    <button type="submit"
+            th:text="${supplier.id != null ? 'Update Supplier' : 'Save Supplier'}">
+        Save Supplier
+    </button>
+
+    <a th:href="@{/suppliers}">Cancel</a>
+</form>
+
+</body>
+</html>

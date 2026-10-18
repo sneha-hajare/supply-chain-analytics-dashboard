@@ -1,0 +1,345 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Performance Analytics</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f6fb;
+            color: #1e293b;
+        }
+
+        header {
+            background: linear-gradient(135deg, #123c69, #2563eb);
+            color: white;
+            padding: 25px 5%;
+        }
+
+        header h1 {
+            font-size: 27px;
+            margin-bottom: 8px;
+        }
+
+        header p {
+            color: #dbeafe;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .intro {
+            margin-bottom: 24px;
+        }
+
+        .intro h2 {
+            margin-bottom: 8px;
+        }
+
+        .intro p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 23px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.06);
+            border-left: 5px solid #2563eb;
+        }
+
+        .stat-card h3 {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #123c69;
+            overflow-wrap: anywhere;
+        }
+
+        .panel {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.06);
+        }
+
+        .panel h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 330px;
+            width: 100%;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            min-width: 650px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: 13px;
+        }
+
+        td {
+            font-size: 14px;
+        }
+
+        .rating {
+            font-weight: bold;
+            color: #15803d;
+        }
+
+        .empty {
+            padding: 25px;
+            text-align: center;
+            color: #64748b;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 11px 17px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 7px;
+            margin: 5px 8px 5px 0;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background: #1d4ed8;
+        }
+
+        footer {
+            text-align: center;
+            padding: 25px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 22px;
+            }
+
+            .container {
+                padding: 0 12px;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+
+            .chart-container {
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>📊 Supplier Performance Analytics</h1>
+    <p>Compare supplier ratings and review overall performance</p>
+</header>
+
+<main class="container">
+
+    <section class="intro">
+        <h2>Supplier Insights</h2>
+        <p>
+            Analyze registered suppliers using their recorded ratings.
+            Higher ratings indicate better recorded performance.
+        </p>
+    </section>
+
+    <section class="stats">
+
+        <div class="stat-card">
+            <h3>Total Suppliers</h3>
+            <div class="value" th:text="${totalSuppliers}">0</div>
+        </div>
+
+        <div class="stat-card">
+            <h3>Average Supplier Rating</h3>
+            <div class="value"
+                 th:text="${#numbers.formatDecimal(averageRating, 1, 2)}">0.00</div>
+            <p style="color:#64748b;font-size:12px;margin-top:8px">
+                Rating scale: 0–5
+            </p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Highest-Rated Supplier</h3>
+            <div class="value"
+                 style="font-size:21px"
+                 th:text="${topSupplier != null ? topSupplier.supplierName : 'No suppliers yet'}">
+                No suppliers yet
+            </div>
+            <p style="color:#64748b;font-size:12px;margin-top:8px"
+               th:if="${topSupplier != null}">
+                Rating:
+                <span th:text="${#numbers.formatDecimal(topSupplier.rating, 1, 2)}">0.00</span>
+                / 5
+            </p>
+        </div>
+
+    </section>
+
+    <section class="panel">
+        <h2>Supplier Rating Comparison</h2>
+
+        <div class="chart-container">
+            <canvas id="supplierChart"></canvas>
+        </div>
+
+        <p th:if="${#lists.isEmpty(suppliers)}"
+           class="empty">
+            No supplier data is available. Add suppliers with ratings
+            to display the comparison chart.
+        </p>
+    </section>
+
+    <section class="panel">
+        <h2>Supplier Performance Details</h2>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Supplier Name</th>
+                    <th>Contact Person</th>
+                    <th>Location</th>
+                    <th>Email</th>
+                    <th>Rating</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="supplier : ${suppliers}">
+                    <td th:text="${supplier.supplierName}">Supplier</td>
+                    <td th:text="${supplier.contactPerson}">Contact</td>
+                    <td th:text="${supplier.location}">Location</td>
+                    <td th:text="${supplier.email}">Email</td>
+                    <td class="rating">
+                        ⭐ <span th:text="${#numbers.formatDecimal(supplier.rating, 1, 2)}">0.00</span>
+                        / 5
+                    </td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(suppliers)}">
+                    <td colspan="5" class="empty">
+                        No suppliers found. Add suppliers first.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <a th:href="@{/}" class="btn">← Dashboard</a>
+    <a th:href="@{/suppliers}" class="btn">Manage Suppliers</a>
+
+</main>
+
+<footer>
+    SupplyChain Analytics | Supplier Performance Module
+</footer>
+
+<script th:inline="javascript">
+    const supplierNames = /*[[${suppliers.![supplierName]}]]*/ [];
+    const supplierRatings = /*[[${suppliers.![rating]}]]*/ [];
+
+    const canvas = document.getElementById('supplierChart');
+
+    if (supplierNames.length > 0) {
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: supplierNames,
+                datasets: [{
+                    label: 'Supplier Rating (out of 5)',
+                    data: supplierRatings,
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#1d4ed8',
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 5,
+                        title: {
+                            display: true,
+                            text: 'Rating'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Supplier'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inventory Management</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            background: #f1f5f9;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #0f172a;
+            color: white;
+        }
+
+        .low {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        a, button {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .alert { color: #dc2626; }
+
+        .edit-button {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+
+        .delete-button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Inventory Management</h1>
+
+<div class="card">
+    <h3>Low-Stock Alerts</h3>
+
+    <p class="alert">
+        Products requiring attention:
+        <strong th:text="${lowStockCount}">0</strong>
+    </p>
+
+    <a th:href="@{/inventory/new}">Add Product</a>
+    <a th:href="@{/}">Dashboard</a>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Product</th>
+        <th>Category</th>
+        <th>Quantity</th>
+        <th>Reorder Level</th>
+        <th>Unit Price</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="item : ${inventory}">
+        <td th:text="${item.id}"></td>
+        <td th:text="${item.productName}"></td>
+        <td th:text="${item.category}"></td>
+        <td th:text="${item.quantity}"></td>
+        <td th:text="${item.reorderLevel}"></td>
+        <td th:text="${item.unitPrice}"></td>
+
+        <td>
+            <span th:if="${item.quantity <= item.reorderLevel}"
+                  class="low">Low Stock</span>
+
+            <span th:unless="${item.quantity <= item.reorderLevel}">
+                In Stock
+            </span>
+        </td>
+
+        <td>
+            <a class="edit-button"
+               th:href="@{/inventory/edit/{id}(id=${item.id})}">
+                Edit
+            </a>
+
+            <form th:action="@{/inventory/delete/{id}(id=${item.id})}"
+                  method="post"
+                  style="display:inline"
+                  onsubmit="return confirm('Delete this product?')">
+
+                <button class="delete-button" type="submit">
+                    Delete
+                </button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>
